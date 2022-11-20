@@ -70,17 +70,16 @@ pub struct ArgvArgc {
 
 impl ArgvArgc {
     fn new(buf: *const c_char, argv: *mut *const c_char, argc: ffi::uint) -> Self {
-        let vec = (0..argc as isize)
-            .map(|i| {
-                let bytes = unsafe { CStr::from_ptr(*argv.offset(i)).to_bytes().to_vec() };
-                OsStringExt::from_vec(bytes)
-            })
-            .collect::<Vec<_>>();
         Self {
             _buffer: buf,
             args: argv,
             _count: argc,
-            iter: vec.into_iter(),
+            iter: (0..argc as isize)
+                .map(|i|
+                     OsStringExt::from_vec(unsafe { CStr::from_ptr(*argv.offset(i)).to_bytes().to_vec() })
+                )
+                .collect::<Vec<_>>()
+                .into_iter(),
         }
     }
 }
@@ -166,6 +165,7 @@ mod tests {
     #[test]
     fn argvargc_iter() {
         let iter = get_argv_and_argc_of_pid(process::id().try_into().unwrap()).unwrap();
-        assert_eq!(iter.count(), std::env::args().count())
+        let args = std::env::args();
+        args.zip(iter).for_each(|(a, e)| assert_eq!(OsString::from(a),e));
     }
 }

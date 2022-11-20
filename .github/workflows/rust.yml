@@ -1,0 +1,34 @@
+name: Rust CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        repository: getargv/getargv
+        path: getargv-c
+        token: ${{ secrets.GH_PAT }}
+    - name: Build libgetargv
+      run: make install_dylib
+      working-directory: getargv-c
+    - uses: actions/checkout@v3
+      with:
+        path: getargv-rust
+    - name: Build
+      run: cargo build --verbose
+      working-directory: getargv-rust
+    - name: Run tests
+      run: cargo test --verbose
+      working-directory: getargv-rust
