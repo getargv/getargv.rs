@@ -2,6 +2,11 @@
  * Copyright: see LICENSE file
  */
 
+//! Provides an [Iterator] over the arguments of a process.
+//!
+//! Provides a function [get_argv_and_argc_of_pid] that parses the args of a process
+//! and then returns a [struct][ArgvArgc] that allows you to iterate over them.
+
 use getargv_sys as ffi;
 use std::ffi::OsString;
 use libc::free;
@@ -15,6 +20,7 @@ use std::{
     ptr::null,
 };
 
+/// Contains an iterable representation of the arguments as parsed by [get_argv_and_argc_of_pid].
 pub struct ArgvArgc {
     args: *const *const c_char,
     _count: ffi::uint,
@@ -96,6 +102,17 @@ impl Drop for ArgvArgc {
     }
 }
 
+/// Parses the arguments of a process, and on success returns an [Iterator] over them.
+///
+///# Argument
+/// * `pid` - the process id of the other process to target
+///
+///# Examples
+///```
+///if let Ok(argvargc) = get_argv_and_argc_of_pid(libc::getppid()) {
+///  println!("We got our parent process' arguments as an iterator! There are {} of them.", argvargc.len());
+///}
+///```
 pub fn get_argv_and_argc_of_pid(pid: ffi::pid_t) -> Result<ArgvArgc> {
     let mut result: ffi::ArgvArgcResult = unsafe { mem::zeroed() };
     let succeeded: bool = unsafe { ffi::get_argv_and_argc_of_pid(pid, &mut result) };
@@ -152,8 +169,7 @@ mod tests {
     fn argvargc_iterator_trait_works() {
         let iter = get_argv_and_argc_of_pid(process::id().try_into().unwrap()).unwrap();
         let args = std::env::args_os();
-        args.zip(iter)
-            .for_each(|(a, e)| assert_eq!(a, e));
+        assert!(args.eq(iter));
     }
 
     #[test]

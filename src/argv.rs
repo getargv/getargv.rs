@@ -2,6 +2,11 @@
  * Copyright: see LICENSE file
  */
 
+//! Fast way to obtain and [print][Argv::print] a representation of the arguments of a process.
+//!
+//! Provides a function [get_argv_of_pid] that parses the args of a process
+//! and then returns a [struct][Argv] that allows you to [print][Argv::print] them.
+
 use getargv_sys as ffi;
 use libc::{calloc, free, memcpy};
 use std::{
@@ -10,6 +15,7 @@ use std::{
     mem,
 };
 
+/// Contains a printable representation of the arguments as parsed by [get_argv_of_pid].
 #[derive(Debug)]
 pub struct Argv {
     _buffer: *const c_char,
@@ -26,6 +32,14 @@ impl Argv {
         }
     }
 
+    /// Prints the arguments as parsed by [get_argv_of_pid].
+    ///
+    /// # Example
+    /// ```rust
+    ///if let Ok(argv) = get_argv_of_pid(libc::getppid(), false, 0) {
+    ///  assert!(argv.unwrap().print().is_ok());
+    ///}
+    /// ```
     pub fn print(&self) -> Result<()> {
         if unsafe {
             ffi::print_argv_of_pid(
@@ -53,7 +67,7 @@ impl Default for Argv {
  */
 unsafe impl Send for Argv {}
 
-/* For Argv to be Sync we have to enforce that you can't write to something stored in a
+/* For Argv to be Sync we have to enforce that you can't write to something stored in an
  * &Argv while that same something could be read or written to from another &Argv. Since
  * Argv doesn't have public members, nor any methods that modify it, there are no
  * soundness issues making Argv sync either.
@@ -91,6 +105,25 @@ impl Drop for Argv {
     }
 }
 
+/// Parses the arguments of another process into a printable format.
+///
+///# Arguments
+///
+/// * `pid` - the process id of the other process to target
+/// * `nuls` - when printing, replace ␀ separators with spaces (when `true`)
+/// * `skip` - when printing, skip this number of leading arguments
+///
+///# Examples
+///```rust
+///if let Ok(argv) = get_argv_of_pid(libc::getppid(), false, 0) {
+///  println!("We got our parent process' arguments, null separated, and without skipping any!");
+///}
+///```
+///```rust
+///if let Ok(argv) = get_argv_of_pid(libc::getppid(), true, 1) {
+///  println!("We got our parent process' arguments, space separated, and skipping the first one!");
+///}
+///```
 pub fn get_argv_of_pid(pid: ffi::pid_t, nuls: bool, skip: ffi::uint) -> Result<Argv> {
     let options = ffi::GetArgvOptions { skip, pid, nuls };
     let mut result: ffi::ArgvResult = Default::default();
