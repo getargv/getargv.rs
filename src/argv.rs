@@ -44,13 +44,30 @@ impl Argv {
     pub fn print(&self) -> Result<()> {
         if unsafe {
             ffi::print_argv_of_pid(
-                self.start_pointer as *mut c_char,
-                self.end_pointer as *mut c_char,
+                self.start_pointer as *const c_char,
+                self.end_pointer as *const c_char,
             )
         } {
             Ok(())
         } else {
             Err(Error::last_os_error())
+        }
+    }
+
+    /// Returns the length of the args to be printed in bytes
+    ///
+    /// # Example
+    /// ```rust
+    /// # use getargv::get_argv_of_pid;
+    ///if let Ok(argv) = get_argv_of_pid(unsafe{libc::getppid()}, false, 0) {
+    ///  println!("{}",argv.len());
+    ///}
+    /// ```
+    pub fn len(&self) -> usize {
+        if self.start_pointer.is_null() || self.end_pointer.is_null() {
+            0
+        } else {
+            unsafe { self.end_pointer.offset_from(self.start_pointer).try_into().unwrap() }
         }
     }
 }
