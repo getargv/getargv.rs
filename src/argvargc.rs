@@ -109,7 +109,8 @@ impl Drop for ArgvArgc {
 ///
 ///# Examples
 ///```
-///if let Ok(argvargc) = get_argv_and_argc_of_pid(libc::getppid()) {
+/// # use getargv::get_argv_and_argc_of_pid;
+///if let Ok(argvargc) = get_argv_and_argc_of_pid(unsafe{libc::getppid()}) {
 ///  println!("We got our parent process' arguments as an iterator! There are {} of them.", argvargc.len());
 ///}
 ///```

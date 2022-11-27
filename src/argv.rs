@@ -36,8 +36,9 @@ impl Argv {
     ///
     /// # Example
     /// ```rust
-    ///if let Ok(argv) = get_argv_of_pid(libc::getppid(), false, 0) {
-    ///  assert!(argv.unwrap().print().is_ok());
+    /// # use getargv::get_argv_of_pid;
+    ///if let Ok(argv) = get_argv_of_pid(unsafe{libc::getppid()}, false, 0) {
+    ///  assert!(argv.print().is_ok());
     ///}
     /// ```
     pub fn print(&self) -> Result<()> {
@@ -115,12 +116,14 @@ impl Drop for Argv {
 ///
 ///# Examples
 ///```rust
-///if let Ok(argv) = get_argv_of_pid(libc::getppid(), false, 0) {
+/// # use getargv::get_argv_of_pid;
+///if let Ok(argv) = get_argv_of_pid(unsafe{libc::getppid()}, false, 0) {
 ///  println!("We got our parent process' arguments, null separated, and without skipping any!");
 ///}
 ///```
 ///```rust
-///if let Ok(argv) = get_argv_of_pid(libc::getppid(), true, 1) {
+/// # use getargv::get_argv_of_pid;
+///if let Ok(argv) = get_argv_of_pid(unsafe{libc::getppid()}, true, 1) {
 ///  println!("We got our parent process' arguments, space separated, and skipping the first one!");
 ///}
 ///```
