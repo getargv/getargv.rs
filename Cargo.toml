@@ -8,7 +8,7 @@ authors = ["CamJN <getargv@narzt.cam>"]
 homepage = "https://getargv.narzt.cam/"
 documentation = "https://docs.rs/getargv"
 repository = "https://github.com/getargv/getargv-rust/"
-description = "The first and only library to provide a correct interface to the KERN_PROCARGS2 sysctl."
+description = "Correctly access another process' args on macOS"
 categories = ["api-bindings", "os::macos-apis"]
 keywords = ["argv", "arguments", "macOS", "KERN_PROCARGS2", "sysctl"]
 
