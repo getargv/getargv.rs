@@ -35,9 +35,20 @@
 //! faster and easier than using this lib, Solaris has `pargs`, and I don't
 //! use Windows so I can't support it, but you might want to look at the
 //! [wmic](https://learn.microsoft.com/en-us/windows/win32/wmisdk/wmic) tool.
+//!
+//! If you are writing a cross platform program, you can depend on this crate
+//! only on macOS by specifying the dependency as:
+//! ```toml
+//! [target.'cfg(target_vendor = "apple")'.dependencies]
+//! getargv = "~PKG_VERSION"
+//! ```
+//! <script>const version = document.querySelector('.version').innerText.match(/[0-9\.]+/)[0];
+//! document.querySelectorAll('code').forEach(c=>c.innerText=c.innerText.replace('PKG_VERSION',version));
+//! </script>
 
 pub mod argv;
 pub mod argvargc;
-
+#[doc(inline)]
 pub use crate::argv::*;
+#[doc(inline)]
 pub use crate::argvargc::*;

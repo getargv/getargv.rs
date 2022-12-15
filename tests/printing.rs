@@ -5,7 +5,7 @@ use std::process::Command;
 
 #[test]
 fn print_works() {
-    let bin = env!("CARGO_BIN_EXE_getargv");
+    let bin = env!("CARGO_BIN_EXE_test_child");
     let args = ["zero", "one", "two", "three"];
     let mut cmd = Command::new(bin);
     if let Some((first, rest)) = args.split_first() {

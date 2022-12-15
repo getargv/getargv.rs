@@ -8,10 +8,9 @@
 //! and then returns a [struct][ArgvArgc] that allows you to iterate over them.
 
 use getargv_sys as ffi;
-use std::ffi::OsString;
 use libc::free;
 use std::{
-    ffi::{c_char, c_void, CStr},
+    ffi::{c_char, c_void, CStr, OsString},
     fmt,
     mem,
     os::unix::ffi::OsStringExt,
