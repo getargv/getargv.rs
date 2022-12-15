@@ -1,6 +1,6 @@
 [package]
 name = "getargv"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 license-file = "LICENSE"
 readme = "README.md"
@@ -21,3 +21,6 @@ features = [ "cargo" ]
 
 [target.'cfg(target_vendor = "apple")'.dependencies]
 getargv-sys = "~0.4.0"
+
+[package.metadata.docs.rs]
+targets = ["x86_64-apple-darwin", "aarch64-apple-darwin"]
