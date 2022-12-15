@@ -20,4 +20,4 @@ version = "~4.0.27"
 features = [ "cargo" ]
 
 [target.'cfg(target_vendor = "apple")'.dependencies]
-getargv-sys = "~0.3.0"
+getargv-sys = "~0.4.0"
