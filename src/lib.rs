@@ -12,7 +12,7 @@
 //! Safe Rust wrapper for the [getargv library](https://getargv.narzt.cam/).
 //!
 //! This crate provides a safe wrapper for the
-//! [getargv-sys](https://getargv.narzt.cam/) crate which provides FFI
+//! [getargv-sys](https://docs.rs/getargv-sys/) crate which provides FFI
 //! bindings to [libgetargv](https://getargv.narzt.cam/) which provides a
 //! correct parser for the `KERN_PROCARGS2` `sysctl` which is how you access
 //! the arguments of another process on macOS.
