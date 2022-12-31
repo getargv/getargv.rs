@@ -6,8 +6,16 @@ use std::{
     ffi::c_uint as uint
 };
 
-const ARG_MAX: usize = 1024 * 1024;
-const PID_MAX: pid_t = 99_999;
+fn arg_max() -> usize {
+    if option_env!("DEP_GETARGV_MACOSX_DEPLOYMENT_TARGET").is_some() {
+        1024 * 1024
+    } else {
+        1024 * 256
+    }
+}
+fn  pid_max() -> pid_t {
+    env!("DEP_GETARGV_PID_MAX").parse::<pid_t>().unwrap()
+}
 
 fn parse_args() -> (pid_t, usize, bool) {
     let matches: ArgMatches = command!()
@@ -15,13 +23,13 @@ fn parse_args() -> (pid_t, usize, bool) {
              .required(true)
              .help("The pid of the process for which to get the arguments")
              .value_name("PID")
-             .value_parser(value_parser!(u64).range(0..=PID_MAX as u64))
+             .value_parser(value_parser!(u64).range(0..=pid_max() as u64))
              .index(1)
         )
         .arg(Arg::new("skip")
              .short('s')
              .value_name("skip")
-             .value_parser(value_parser!(u64).range(0..ARG_MAX as u64))
+             .value_parser(value_parser!(u64).range(0..arg_max() as u64))
              .default_value("0")
              .required(false)
              .help("Number of arguments to skip"),
