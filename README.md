@@ -28,7 +28,7 @@ Clone the `libgetargv` repo: `git clone https://github.com/getargv/getargv.git`.
 
 Running `make install_dylib`, installs the library to the `/usr/local/` prefix by default; you can change the install location with the `PREFIX` `make` variable: `make PREFIX=/opt install_dylib`.
 
-I'm working on building binary artifacts to install without compilation, using `pkg` installers, however even once that's done, depeding on your system, it may still be nessesary to compile from source; eg. if you have built your own xnu kernel with a custom `PID_MAX` value.
+I'm working on building binary artifacts to install without compilation, using `pkg` installers, however even once that's done, depeding on your system, it may still be necessary to compile from source; eg. if you have built your own xnu kernel with a custom `PID_MAX` value.
 
 ## Building `libgetargv`
 I've built `libgetargv` on macOS 10.7-13, using only the <abbr title="Command Line Tools">CLT</abbr> package, not the full Xcode install. If you need to override variables, do so inside the `make` command, eg: `make EXTRA_CPPFLAGS=-DMACRO EXTRA_CFLAGS=-std=c17 dylib`. If you are trying to build on a version of macOS earlier than 10.7, let me know how it goes.
