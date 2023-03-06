@@ -8,39 +8,33 @@
 //! and then returns a [struct][ArgvArgc] that allows you to iterate over them.
 
 use getargv_sys as ffi;
-use libc::free;
 use std::{
-    ffi::{c_char, c_void, CStr, OsString},
+    ffi::{CStr, OsString},
     fmt,
     mem,
     os::unix::ffi::OsStringExt,
     io::{Error, Result},
     vec,
-    ptr::null,
 };
 
 /// Contains an iterable representation of the arguments as parsed by [get_argv_and_argc_of_pid].
 pub struct ArgvArgc {
-    args: *const *const c_char,
-    _count: ffi::uint,
-    _buffer: *const c_char,
+    res: ffi::ArgvArgcResult,
     iter: vec::IntoIter<OsString>,
 }
 
 impl ArgvArgc {
-    fn new(buf: *const c_char, argv: *mut *const c_char, argc: ffi::uint) -> Self {
+    fn new(res: ffi::ArgvArgcResult) -> Self {
         Self {
-            _buffer: buf,
-            args: argv,
-            _count: argc,
-            iter: (0..argc as isize)
+            iter: (0..res.argc as isize)
                 .map(|i| {
                     OsStringExt::from_vec(unsafe {
-                        CStr::from_ptr(*argv.offset(i)).to_bytes().to_vec()
+                        CStr::from_ptr(*res.argv.offset(i)).to_bytes().to_vec()
                     })
                 })
                 .collect::<Vec<_>>()
                 .into_iter(),
+            res,
         }
     }
 }
@@ -60,7 +54,7 @@ unsafe impl Sync for ArgvArgc {}
 
 impl Default for ArgvArgc {
     fn default() -> Self {
-        Self::new(null(), null::<*const c_char>().cast_mut() , 0)
+        Self::new(ffi::ArgvArgcResult::default())
     }
 }
 
@@ -94,10 +88,7 @@ impl DoubleEndedIterator for ArgvArgc {
 
 impl Drop for ArgvArgc {
     fn drop(&mut self) {
-        unsafe {
-            free(self.args as *mut c_void);
-            free(self._buffer as *mut c_void);
-        }
+        unsafe { ffi::free_ArgvArgcResult(&mut self.res); }
     }
 }
 
@@ -117,11 +108,7 @@ pub fn get_argv_and_argc_of_pid(pid: ffi::pid_t) -> Result<ArgvArgc> {
     let mut result: ffi::ArgvArgcResult = unsafe { mem::zeroed() };
     let succeeded: bool = unsafe { ffi::get_argv_and_argc_of_pid(pid, &mut result) };
     if succeeded {
-        Ok(ArgvArgc::new(
-            result.buffer,
-            result.argv as *mut *const c_char,
-            result.argc,
-        ))
+        Ok(ArgvArgc::new(result))
     } else {
         Err(Error::last_os_error())
     }
@@ -132,7 +119,7 @@ mod tests {
     use super::*;
     use std::process;
     use std::fmt::Write;
-    use std::ptr::null;
+    use std::ptr::null_mut;
 
     #[test]
     fn get_argv_and_argc_of_pid_sanity_check() {
@@ -143,9 +130,9 @@ mod tests {
     #[test]
     fn argvargc_default_trait_sanity_check() {
         let argv_argc: ArgvArgc = Default::default();
-        assert_eq!(argv_argc._count, 0);
-        assert_eq!(argv_argc._buffer, null());
-        assert_eq!(argv_argc.args, null());
+        assert_eq!(argv_argc.res.argc, 0);
+        assert_eq!(argv_argc.res.buffer, null_mut());
+        assert_eq!(argv_argc.res.argv, null_mut());
         assert_eq!(argv_argc.len(), 0);
         assert_eq!(argv_argc.last(), None);
     }

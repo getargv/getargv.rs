@@ -8,30 +8,18 @@
 //! and then returns a [struct][Argv] that allows you to [print][Argv::print] them.
 
 use getargv_sys as ffi;
-use libc::{calloc, free, memcpy};
+use libc::{calloc, memcpy};
 use std::{
-    ffi::{c_char, c_void},
+    ffi::c_char,
     io::{Error, Result},
     mem,
 };
 
 /// Contains a printable representation of the arguments as parsed by [get_argv_of_pid].
 #[derive(Debug)]
-pub struct Argv {
-    _buffer: *const c_char,
-    start_pointer: *const c_char,
-    end_pointer: *const c_char,
-}
+pub struct Argv(ffi::ArgvResult);
 
 impl Argv {
-    fn new(buf: *mut c_char, start_pointer: *const c_char, end_pointer: *const c_char) -> Self {
-        Self {
-            _buffer: buf,
-            start_pointer,
-            end_pointer,
-        }
-    }
-
     /// Prints the arguments as parsed by [get_argv_of_pid].
     ///
     /// # Example
@@ -44,8 +32,8 @@ impl Argv {
     pub fn print(&self) -> Result<()> {
         if unsafe {
             ffi::print_argv_of_pid(
-                self.start_pointer as *const c_char,
-                self.end_pointer as *const c_char,
+                self.0.start_pointer as *const c_char,
+                self.0.end_pointer as *const c_char,
             )
         } {
             Ok(())
@@ -64,18 +52,30 @@ impl Argv {
     ///}
     /// ```
     pub fn len(&self) -> usize {
-        if self.start_pointer.is_null() || self.end_pointer.is_null() {
+        if self.0.start_pointer.is_null() || self.0.end_pointer.is_null() {
             0
         } else {
-            unsafe { self.end_pointer.offset_from(self.start_pointer).try_into().unwrap() }
+            unsafe { self.0.end_pointer.offset_from(self.0.start_pointer).try_into().unwrap() }
         }
+    }
+
+    /// Returns whether the Argv is empty
+    ///
+    /// # Example
+    /// ```rust
+    /// # use getargv::get_argv_of_pid;
+    ///if let Ok(argv) = get_argv_of_pid(unsafe{libc::getppid()}, false, 0) {
+    ///  println!("{}",argv.is_empty());
+    ///}
+    /// ```
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 }
 
 impl Default for Argv {
-    fn default() -> Self{
-        let result: Self = unsafe { mem::zeroed() };
-        result
+    fn default() -> Self {
+        unsafe { mem::zeroed() }
     }
 }
 
@@ -119,7 +119,7 @@ impl Clone for Argv {
 
 impl Drop for Argv {
     fn drop(&mut self) {
-        unsafe { free(self._buffer as *mut c_void) }
+        unsafe { ffi::free_ArgvResult(&mut self.0) }
     }
 }
 
@@ -149,7 +149,7 @@ pub fn get_argv_of_pid(pid: ffi::pid_t, nuls: bool, skip: ffi::uint) -> Result<A
     let mut result: ffi::ArgvResult = Default::default();
     let succeeded: bool = unsafe { ffi::get_argv_of_pid(&options, &mut result) };
     if succeeded {
-        Ok(Argv::new(result.buffer, result.start_pointer, result.end_pointer))
+        Ok(Argv(result))
     } else {
         Err(Error::last_os_error())
     }
@@ -187,17 +187,17 @@ mod tests {
     fn argv_clone_trait_sanity_check() {
         let argv: Argv = Default::default();
         let clone: Argv = argv.clone();
-        assert_eq!(argv._buffer, clone._buffer);
-        assert_eq!(argv.start_pointer, clone.start_pointer);
-        assert_eq!(argv.end_pointer, clone.end_pointer);
+        assert_eq!(argv.0.buffer, clone.0.buffer);
+        assert_eq!(argv.0.start_pointer, clone.0.start_pointer);
+        assert_eq!(argv.0.end_pointer, clone.0.end_pointer);
     }
 
     #[test]
     fn argv_default_trait_sanity_check() {
         let argv: Argv = Default::default();
-        assert_eq!(argv._buffer, std::ptr::null());
-        assert_eq!(argv.start_pointer, std::ptr::null());
-        assert_eq!(argv.end_pointer, std::ptr::null());
+        assert_eq!(argv.0.buffer, std::ptr::null_mut());
+        assert_eq!(argv.0.start_pointer, std::ptr::null_mut());
+        assert_eq!(argv.0.end_pointer, std::ptr::null_mut());
     }
 
     #[test]
@@ -206,6 +206,6 @@ mod tests {
         let mut output = String::new();
         write!(&mut output, "{:?}",argv)
             .expect("Error occurred while trying to write in String");
-        assert_eq!(output, "Argv { _buffer: 0x0, start_pointer: 0x0, end_pointer: 0x0 }");
+        assert_eq!(output, "Argv(ArgvResult { buffer: 0x0, start_pointer: 0x0, end_pointer: 0x0 })");
     }
 }
