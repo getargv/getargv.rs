@@ -14,26 +14,20 @@ use std::{
     mem,
     os::unix::ffi::OsStringExt,
     io::{Error, Result},
-    vec,
 };
 
 /// Contains an iterable representation of the arguments as parsed by [get_argv_and_argc_of_pid].
 pub struct ArgvArgc {
     res: ffi::ArgvArgcResult,
-    iter: vec::IntoIter<OsString>,
+    fw_index: usize,
+    bk_index: isize,
 }
 
 impl ArgvArgc {
     fn new(res: ffi::ArgvArgcResult) -> Self {
         Self {
-            iter: (0..res.argc as isize)
-                .map(|i| {
-                    OsStringExt::from_vec(unsafe {
-                        CStr::from_ptr(*res.argv.offset(i)).to_bytes().to_vec()
-                    })
-                })
-                .collect::<Vec<_>>()
-                .into_iter(),
+            fw_index: 0,
+            bk_index: res.argc as isize - 1,
             res,
         }
     }
@@ -60,29 +54,49 @@ impl Default for ArgvArgc {
 
 impl fmt::Debug for ArgvArgc {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.iter.as_slice().fmt(f)
+        (0..self.res.argc as isize)
+            .map(|i| {
+                OsStringExt::from_vec(unsafe {
+                    CStr::from_ptr(*self.res.argv.offset(i)).to_bytes().to_vec()
+                })
+            })
+            .skip(self.fw_index)
+            .take(self.len())
+            .collect::<Vec<OsString>>().fmt(f)
     }
 }
 
 impl Iterator for ArgvArgc {
     type Item = OsString;
     fn next(&mut self) -> Option<OsString> {
-        self.iter.next()
+        if self.fw_index as isize > self.bk_index || self.fw_index == self.res.argc as usize { return None; }
+        let i = self.fw_index as isize;
+        self.fw_index+=1;
+        Some(OsStringExt::from_vec(unsafe {
+            CStr::from_ptr(*self.res.argv.offset(i)).to_bytes().to_vec()
+        }))
     }
     fn size_hint(&self) -> (usize, Option<usize>) {
-        self.iter.size_hint()
+        let count = self.len();
+        (count, Some(count))
     }
 }
 
 impl ExactSizeIterator for ArgvArgc {
     fn len(&self) -> usize {
-        self.iter.len()
+        // this can never be -1 due to the bk_index never reaching -2 and +1 bringing it up to at least 0
+        (1 + self.bk_index) as usize - self.fw_index
     }
 }
 
 impl DoubleEndedIterator for ArgvArgc {
     fn next_back(&mut self) -> Option<OsString> {
-        self.iter.next_back()
+        if self.fw_index as isize > self.bk_index || self.bk_index < 0 { return None; }
+        let i = self.bk_index as isize;
+        self.bk_index-=1;
+        Some(OsStringExt::from_vec(unsafe {
+            CStr::from_ptr(*self.res.argv.offset(i)).to_bytes().to_vec()
+        }))
     }
 }
 
@@ -138,12 +152,30 @@ mod tests {
     }
 
     #[test]
-    fn argvargc_debug_trait_sanity_check() {
+    fn empty_argvargc_debug_trait_sanity_check() {
         let argv_argc: ArgvArgc = Default::default();
         let mut output = String::new();
         write!(&mut output, "{:?}",argv_argc)
             .expect("Error occurred while trying to write in String");
         assert_eq!(output, "[]");
+    }
+
+    #[test]
+    fn non_empty_argvargc_debug_trait_sanity_check() {
+        let argv_argc: ArgvArgc = get_argv_and_argc_of_pid(process::id().try_into().unwrap()).unwrap();
+        let mut output = String::new();
+        write!(&mut output, "{:?}",argv_argc).expect("Error occurred while trying to write in String");
+        assert_eq!(output, format!("{:?}",std::env::args_os().collect::<Vec<OsString>>()));
+    }
+
+    #[test]
+    fn one_skipped_argvargc_debug_trait_sanity_check() {
+        let mut argv_argc: ArgvArgc = get_argv_and_argc_of_pid(process::id().try_into().unwrap()).unwrap();
+        argv_argc.next();
+        let mut actual = String::new();
+        write!(&mut actual, "{:?}",argv_argc).expect("Error occurred while trying to write in String");
+        let expected = format!("{:?}",std::env::args_os().skip(1).collect::<Vec<OsString>>());
+        assert_eq!(actual, expected);
     }
 
     #[test]
