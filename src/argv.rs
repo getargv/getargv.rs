@@ -8,7 +8,6 @@
 //! and then returns a [struct][Argv] that allows you to [print][Argv::print] them.
 
 use getargv_sys as ffi;
-use libc::{calloc, memcpy};
 use std::{
     ffi::c_char,
     io::{Error, Result},
@@ -92,31 +91,6 @@ unsafe impl Send for Argv {}
  */
 unsafe impl Sync for Argv {}
 
-impl Clone for Argv {
-    fn clone(&self) -> Self {
-        if self.start_pointer.is_null() ||
-            self.end_pointer.is_null() {
-                Default::default()
-            } else {
-                unsafe {
-                    let nobj = self.end_pointer.offset_from(self.start_pointer) as usize;
-                    let size = mem::size_of::<c_char>();
-                    if nobj > 0 {
-                        let buf: *mut c_char = calloc(nobj, size).cast();
-                        memcpy(buf.cast(), self.start_pointer.cast(), size * nobj);
-                        Self {
-                            _buffer: buf,
-                            start_pointer: buf,
-                            end_pointer: buf.add(nobj),
-                        }
-                    } else {
-                        Default::default()
-                    }
-                }
-            }
-    }
-}
-
 impl Drop for Argv {
     fn drop(&mut self) {
         unsafe { ffi::free_ArgvResult(&mut self.0) }
@@ -181,15 +155,6 @@ mod tests {
         assert!(result.is_ok());
         let result = result.unwrap();
         assert!(result.print().is_ok());
-    }
-
-    #[test]
-    fn argv_clone_trait_sanity_check() {
-        let argv: Argv = Default::default();
-        let clone: Argv = argv.clone();
-        assert_eq!(argv.0.buffer, clone.0.buffer);
-        assert_eq!(argv.0.start_pointer, clone.0.start_pointer);
-        assert_eq!(argv.0.end_pointer, clone.0.end_pointer);
     }
 
     #[test]
