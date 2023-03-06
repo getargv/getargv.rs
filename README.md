@@ -18,7 +18,12 @@ To make `getargv`:
 
  - Install `libgetargv` to your system (see below).
  - Clone this repo and run `cargo build` or
- - add `getargv = "~0.1.2"` to your `Cargo.toml` file dependencies.
+ - add the crate to your `Cargo.toml` file dependencies.
+
+```toml
+[target.'cfg(target_vendor = "apple")'.dependencies]
+getargv = "~0.2.0"
+```
 
 ## Installing `libgetargv`
 
