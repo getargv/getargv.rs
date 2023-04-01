@@ -1,6 +1,6 @@
 <h1><img src="logo.svg" width="200" alt="getargv"></h1>
 
-[![Rust CI](https://github.com/getargv/getargv-rust/actions/workflows/rust.yml/badge.svg)](https://github.com/getargv/getargv-rust/actions/workflows/rust.yml)
+[![Rust CI](https://github.com/getargv/getargv.rs/actions/workflows/rust.yml/badge.svg)](https://github.com/getargv/getargv.rs/actions/workflows/rust.yml)
 
 `libgetargv` is a library that allows you to get the arguments that were passed to another running process on macOS. It is intended to provide roughly the same functionality as reading from `/proc/<pid>/cmdline` on Linux. On macOS this is done by parsing the output of the `KERN_PROCARGS2` sysctl, which is <abbr title="always, in my observation">very often</abbr> implemented [incorrectly](https://getargv.narzt.cam/hallofshame.html), due to the overlooked possibility of leading empty arguments passed to the target process. This crate is the Rust bindings for the `libgetargv` library.
 
@@ -16,9 +16,9 @@ macOS is required as this is a macOS specific `sysctl`, even BSD does not implem
 
 To make `getargv`:
 
- - Install `libgetargv` to your system (see below).
- - Clone this repo and run `cargo build` or
- - add the crate to your `Cargo.toml` file dependencies.
+- Install `libgetargv` to your system (see below).
+- Clone this repo and run `cargo build` or
+- add the crate to your `Cargo.toml` file dependencies.
 
 ```toml
 [target.'cfg(target_vendor = "apple")'.dependencies]
