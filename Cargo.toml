@@ -1,6 +1,6 @@
 [package]
 name = "getargv"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 license-file = "LICENSE"
 readme = "README.md"
@@ -12,6 +12,9 @@ description = "Correctly access another process' args on macOS"
 categories = ["api-bindings", "os::macos-apis"]
 keywords = ["argv", "arguments", "macOS", "KERN_PROCARGS2", "sysctl"]
 
+[package.metadata.docs.rs]
+targets = ["x86_64-apple-darwin", "aarch64-apple-darwin"]
+
 [dependencies]
 libc = "~0.2.153"
 
@@ -21,6 +24,3 @@ features = [ "cargo" ]
 
 [target.'cfg(target_vendor = "apple")'.dependencies]
 getargv-sys = "~0.5.2"
-
-[package.metadata.docs.rs]
-targets = ["x86_64-apple-darwin", "aarch64-apple-darwin"]
