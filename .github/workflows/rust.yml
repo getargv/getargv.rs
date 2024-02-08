@@ -15,7 +15,7 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         repository: getargv/getargv
         path: getargv-c
@@ -23,7 +23,7 @@ jobs:
     - name: Build libgetargv
       run: make install_dylib
       working-directory: getargv-c
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         path: getargv-rust
     - name: Build
