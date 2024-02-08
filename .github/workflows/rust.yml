@@ -13,6 +13,8 @@ jobs:
   build:
 
     runs-on: macos-latest
+    permissions:
+      contents: write
 
     steps:
     - uses: actions/checkout@v4
@@ -31,4 +33,19 @@ jobs:
       working-directory: getargv-rust
     - name: Run tests
       run: cargo test --verbose
+      working-directory: getargv-rust
+
+    - name: Dryrun Publish Crate
+      run: cargo publish --dry-run
+      working-directory: getargv-rust
+    - name: Bump version
+      run: |
+        cargo install cargo-bump
+        cargo bump patch --git-tag
+        git push --follow-tags
+      working-directory: getargv-rust
+    - name: Publish Crate
+      run: cargo publish --token ${CRATES_TOKEN}
+      env:
+        CRATES_TOKEN: ${{ secrets.CRATES_TOKEN }}
       working-directory: getargv-rust
