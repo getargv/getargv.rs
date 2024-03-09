@@ -6,16 +6,15 @@ use std::{
     ffi::c_uint as uint
 };
 
-fn arg_max() -> usize {
+const fn arg_max() -> usize {
     if option_env!("DEP_GETARGV_MACOSX_DEPLOYMENT_TARGET").is_some() {
         1024 * 1024
     } else {
         1024 * 256
     }
 }
-fn  pid_max() -> pid_t {
-    env!("DEP_GETARGV_PID_MAX").parse::<pid_t>().unwrap()
-}
+
+const PID_MAX: pid_t = env!("DEP_GETARGV_PID_MAX").parse::<pid_t>().unwrap();
 
 fn parse_args() -> (pid_t, usize, bool) {
     let matches: ArgMatches = command!()
@@ -23,7 +22,7 @@ fn parse_args() -> (pid_t, usize, bool) {
              .required(true)
              .help("The pid of the process for which to get the arguments")
              .value_name("PID")
-             .value_parser(value_parser!(u64).range(0..=pid_max() as u64))
+             .value_parser(value_parser!(u64).range(0..=PID_MAX))
              .index(1)
         )
         .arg(Arg::new("skip")
@@ -53,14 +52,4 @@ fn main() {
     let argv = get_argv_of_pid(pid, nuls, skip as uint);
     argv.expect("failed to get args").print().expect("failed to print");
     let _ = stdout().flush();
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn call_get_arg_max() {
-        assert!(true);
-    }
 }
