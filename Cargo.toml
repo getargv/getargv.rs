@@ -2,7 +2,7 @@
 name = "getargv"
 version = "0.2.1"
 edition = "2021"
-license-file = "LICENSE"
+license = "BSD-3-Clause"
 readme = "README.md"
 authors = ["CamJN <getargv@narzt.cam>"]
 homepage = "https://getargv.narzt.cam/"
@@ -11,16 +11,17 @@ repository = "https://github.com/getargv/getargv.rs/"
 description = "Correctly access another process' args on macOS"
 categories = ["api-bindings", "os::macos-apis"]
 keywords = ["argv", "arguments", "macOS", "KERN_PROCARGS2", "sysctl"]
+rust-version = "1.77"
 
 [package.metadata.docs.rs]
 targets = ["x86_64-apple-darwin", "aarch64-apple-darwin"]
 
 [dependencies]
-libc = "~0.2.153"
+libc = "~0.2.155"
 
 [dev-dependencies.clap]
-version = "~4.5.0"
+version = "~4.5.14"
 features = [ "cargo" ]
 
 [target.'cfg(target_vendor = "apple")'.dependencies]
-getargv-sys = "~0.5.2"
+getargv-sys = "~0.5.5"
