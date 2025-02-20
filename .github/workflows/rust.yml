@@ -29,6 +29,8 @@ jobs:
     - name: Install libgetargv
       run: sudo make install_dylib
       working-directory: getargv-c
+    - name: setup-rust
+      run: rustup update stable
     - uses: actions/checkout@v4
       with:
         path: getargv-rust
