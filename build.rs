@@ -5,7 +5,8 @@
 use std::env;
 
 fn building_docs() -> bool {
-    env::var("DOCS_RS").is_ok_and(|v| v == "1")
+    // https://docs.rs/about/builds#detecting-docsrs
+    env::var("DOCS_RS").is_ok()
 }
 
 fn building_for_darwin() -> bool {
