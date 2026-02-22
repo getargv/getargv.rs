@@ -22,7 +22,7 @@ jobs:
       with:
         repository: getargv/getargv
         path: getargv-c
-        token: ${{ secrets.GH_PAT }}
+        token: ${{ secrets.GETARGV_READ }}
     - name: Build libgetargv
       run: make dylib
       working-directory: getargv-c
